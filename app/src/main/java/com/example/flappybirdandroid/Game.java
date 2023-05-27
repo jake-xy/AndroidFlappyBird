@@ -3,11 +3,15 @@ package com.example.flappybirdandroid;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+
+import com.example.flappybirdandroid.main.*;
+
 
 /*
     Game manages all objects in the game and is responsible for updating all tha game states and
@@ -17,23 +21,34 @@ import androidx.core.content.ContextCompat;
 public class Game extends SurfaceView implements SurfaceHolder.Callback {
 
     private GameLoop gameLoop;
-    private Context context;
+    private Bird bird;
+
 
     public Game(Context context) {
         super(context);
-
         // get surface holder
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
-
-        this.context = context;
-
         gameLoop = new GameLoop(this, surfaceHolder);
         setFocusable(true);
     }
 
     @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        switch(event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                if (bird.rect.top > 0)
+                    bird.jump();
+                return true;
+        }
+
+        return super.onTouchEvent(event);
+    }
+
+    @Override
     public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
+        bird = new Bird(this);
         gameLoop.startLoop();
     }
 
@@ -50,6 +65,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
+        bird.draw(canvas);
         drawUPS(canvas);
         drawFPS(canvas);
     }
@@ -58,19 +74,21 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         String averageUPS = Double.toString(gameLoop.getAverageUPS());
         Paint paint = new Paint();
         paint.setTextSize(40);
-        paint.setColor(ContextCompat.getColor(context, R.color.magenta));
+        paint.setColor(ContextCompat.getColor(getContext(), R.color.magenta));
         canvas.drawText("UPS: " + averageUPS, 20, 70, paint);
     }
 
     public void drawFPS(Canvas canvas) {
         String averageFPS = Double.toString(gameLoop.getAverageFPS());
         Paint paint = new Paint();
-        paint.setColor(ContextCompat.getColor(context, R.color.magenta));
+
+        paint.setColor(ContextCompat.getColor(getContext(), R.color.magenta));
         paint.setTextSize(40);
         canvas.drawText("FPS: " + averageFPS, 20, 120, paint);
     }
 
     public void update() {
-
+        // update game state
+        bird.update();
     }
 }

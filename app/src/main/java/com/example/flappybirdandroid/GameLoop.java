@@ -4,7 +4,7 @@ import android.graphics.Canvas;
 import android.view.SurfaceHolder;
 
 public class GameLoop extends Thread{
-    private static final double MAX_UPS = 60.0; // target FPS
+    private static final double MAX_UPS = 30.0; // target FPS
     private static final double UPS_PERIOD = 1E+3/MAX_UPS;
     private boolean running = false;
     private SurfaceHolder surfaceHolder;
@@ -32,7 +32,6 @@ public class GameLoop extends Thread{
     @Override
     public void run() {
         super.run();
-
         // Declare time and cycle variables
         int updateCount = 0, frameCount = 0;
 

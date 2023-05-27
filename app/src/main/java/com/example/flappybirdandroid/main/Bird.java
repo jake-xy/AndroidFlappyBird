@@ -13,10 +13,11 @@ public class Bird {
 
     private Game game;
     public Rect rect;
-    double acc = 0;
-    private final int JUMP_VEL = 50;
-    private boolean jumping = false;
-    private double jumpVel = 0;
+    public boolean alive = true, onGround = false;
+    private boolean initDeathAnime = false;
+    private final static int JUMP_VEL = 45;
+    private double jumpVel = 0, acc = 0;
+
 
     public Bird(Game game) {
         this.game = game;
@@ -33,26 +34,31 @@ public class Bird {
     }
 
     public void update() {
-        if (jumping) {
-            rect.moveY(-jumpVel);
 
-            if (jumpVel > -JUMP_VEL) {
-                jumpVel -= 4;
+        if (!onGround) {
+            rect.moveY(jumpVel);
+
+            if (jumpVel > 0) {
+                acc += 0.3;
+                jumpVel += 3 + acc;
             }
             else {
-                jumping = false;
+                jumpVel += 3;
             }
         }
-        else {
-            acc += 10;
-            this.rect.moveY(-jumpVel + acc);
+
+        if(!alive && !initDeathAnime) {
+            // jump
+            jumpVel = -JUMP_VEL;
+            acc = 0;
+            initDeathAnime = true;
         }
     }
 
     public void jump() {
-        jumpVel = JUMP_VEL;
-        jumping = true;
-        acc = 0;
-        System.out.println("JUMPS!!!");
+        if (alive) {
+            jumpVel = -JUMP_VEL;
+            acc = 0;
+        }
     }
 }

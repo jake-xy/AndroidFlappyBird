@@ -10,7 +10,7 @@ import com.example.flappybirdandroid.R;
 public class Rect {
 
     public double x, y, w, h;
-    public double top, left, bot, right;
+    public double top, left, bot, right, centerX, centerY;
 
     public Rect(int x, int y, int w, int h) {
         this.x = x;
@@ -22,6 +22,7 @@ public class Rect {
         this.left = x;
         this.bot = top + h;
         this.right = left + w;
+        centerX = left + w/2;
     }
 
 
@@ -31,11 +32,20 @@ public class Rect {
         this.w = w;
         this.h = h;
 
-        this.top = y;
-        this.left = x;
-        this.bot = top + h;
-        this.right = left + w;
+        updateRect();
     }
+
+
+    private void updateRect() {
+        top = y;
+        left = x;
+        bot = y + h;
+        right = x + w;
+
+        centerX = x + w/2;
+        centerY = y + h/2;
+    }
+
 
     public boolean collides(int x, int y) {
 
@@ -48,15 +58,38 @@ public class Rect {
         return false;
     }
 
+
+    public boolean collides(Rect rect) {
+
+        if (right >= rect.left && left <= rect.right) {
+            if (bot >= rect.top && top <= rect.bot) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+        updateRect();
+    }
+
+
+    public void setX(double x) {
+        this.x = x;
+        updateRect();
+    }
+
+
     public void moveY(double val) {
         this.y += val;
-        this.top = y;
-        this.bot = top + h;
+        updateRect();
     }
 
     public void moveX(double val) {
         this.x += val;
-        this.left = x;
-        this.right = left + w;
+        updateRect();
     }
+
 }

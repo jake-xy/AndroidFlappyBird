@@ -92,4 +92,12 @@ public class Rect {
         updateRect();
     }
 
+    public double getCenterX() {
+        return left + w/2;
+    }
+
+    public double getCenterY() {
+        return top + h/2;
+    }
+
 }

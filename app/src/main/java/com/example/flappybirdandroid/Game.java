@@ -3,6 +3,8 @@ package com.example.flappybirdandroid;
 import static com.example.flappybirdandroid.main.Utils.*;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.view.MotionEvent;
@@ -27,6 +29,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     private Pipe[] pipes = new Pipe[0];
     private Ground ground;
     private int score = 0, timer = 0;
+    Bitmap bgImg;
 
     public Game(Context context) {
         super(context);
@@ -65,6 +68,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
         initGame();
+        bgImg = BitmapFactory.decodeResource(this.getResources(), R.drawable.bg);
+        bgImg = Bitmap.createScaledBitmap(bgImg, getWidth(), getHeight(), true);
         gameLoop.startLoop();
     }
 
@@ -81,10 +86,12 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
+        canvas.drawBitmap(bgImg, 0, 0, null);
 
         for (Pipe pipe : pipes) {
             pipe.draw(canvas);
         }
+
         ground.draw(canvas);
         bird.draw(canvas);
 
@@ -127,6 +134,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
             bird.onGround = true;
             bird.alive = false;
         }
+
+        if (bird.alive) ground.update();
 
         for (Pipe pipe : pipes) {
             if (bird.alive) {

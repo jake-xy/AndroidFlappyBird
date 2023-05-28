@@ -2,6 +2,8 @@ package com.example.flappybirdandroid.main;
 
 import static com.example.flappybirdandroid.main.Utils.getRandomNumber;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
@@ -15,40 +17,49 @@ public class Pipe {
 
     public Rect gapRect, topRect, botRect;
     public boolean passed = false;
-    public static double vel = -20;
+    public static double vel = -13;
     Game game;
+    Bitmap bitmap;
 
     public Pipe(Game game) {
         this.game = game;
-        double h = 540;
-        double randomY = (double) getRandomNumber((int) Ground.height, (int) (game.getHeight() - (Ground.height+h)));
+        double gapH = 540;
+        double randomY = (double) getRandomNumber((int) Ground.height, (int) (game.getHeight() - (Ground.height*1.5+gapH)));
 
-        gapRect = new Rect(game.getWidth() + 100, randomY, 150, h);
+        gapRect = new Rect(game.getWidth() + 100, randomY, 190, gapH);
         topRect = new Rect(gapRect.x, 0, gapRect.w, 0+ gapRect.top);
         botRect = new Rect(gapRect.x, gapRect.bot, gapRect.w, game.getHeight() - gapRect.bot);
+
+        bitmap = BitmapFactory.decodeResource(game.getResources(), R.drawable.pipe);
+        bitmap = Bitmap.createScaledBitmap(bitmap, (int)gapRect.w, (int)(gapRect.w*bitmap.getHeight() / bitmap.getWidth()), true );
     }
 
     public Pipe(Game game, double x) {
-        this.game = game;
-        double h = 540;
-        double randomY = (double) getRandomNumber(200, (int) (game.getHeight() - (200+h)));
-
-        gapRect = new Rect(x, randomY, 150, h);
-        topRect = new Rect(gapRect.x, 0, gapRect.w, 0+ gapRect.top);
-        botRect = new Rect(gapRect.x, gapRect.bot, gapRect.w, game.getHeight() - gapRect.bot);
+        this(game);
+        this.gapRect.setX(x);
+        this.topRect.setX(x);
+        this.botRect.setX(x);
     }
 
 
     public void draw(Canvas canvas) {
         Paint paint = new Paint();
-        paint.setColor(ContextCompat.getColor(game.getContext(), R.color.white));
-        paint.setStrokeWidth(10);
-        // left top right bot
-        canvas.drawRect((float) topRect.left, (float) topRect.top, (float) topRect.right, (float) topRect.bot, paint);
-        canvas.drawRect((float) botRect.left, (float) botRect.top, (float) botRect.right, (float) botRect.bot, paint);
+//        // hitboxes
+//        paint.setColor(ContextCompat.getColor(game.getContext(), R.color.white));
+//        paint.setStrokeWidth(10);
+//            // top pipe
+//        canvas.drawRect((float) topRect.left, (float) topRect.top, (float) topRect.right, (float) topRect.bot, paint);
+//            // bot pipe
+//        canvas.drawRect((float) botRect.left, (float) botRect.top, (float) botRect.right, (float) botRect.bot, paint);
 
-//        canvas.drawRect((float) gapRect.x, (float) 0, (float) gapRect.right, (float) gapRect.y, paint);
-//        canvas.drawRect((float) gapRect.left, (float) gapRect.bot, (float) gapRect.right, game.getHeight(), paint);
+        // sprite
+            // bot pipe
+        canvas.drawBitmap(bitmap, (float) botRect.left, (float) botRect.top, paint);
+            // top pipe
+        canvas.rotate(180F, (float) topRect.getCenterX(), (float) (topRect.bot - bitmap.getHeight()/2));
+        canvas.drawBitmap(bitmap, (float) topRect.left, (float) (topRect.bot - bitmap.getHeight()), paint);
+        canvas.rotate(-180F, (float) topRect.getCenterX(), (float) (topRect.bot - bitmap.getHeight()/2));
+
     }
 
 

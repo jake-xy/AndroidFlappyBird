@@ -21,7 +21,9 @@ public class Ground {
 
     public Ground(Game game) {
         this.game = game;
-        rect = new Rect(game.getWidth(), game.getHeight()-height, game.getWidth()+90, height);
+        Ground.height = game.scaledY(130);
+
+        rect = new Rect(game.getWidth(), game.getHeight()-height, game.getWidth() + game.scaledX(20), height);
         for (int i = 0; i < 2; i++) {
             displayRects[i] = new Rect(rect.x*i, rect.y, rect.w, rect.h);
         }
@@ -30,16 +32,14 @@ public class Ground {
     }
 
     public void update() {
-        for (Rect tile : displayRects) {
-            // update its pos
-            tile.moveX(Pipe.vel);
-            if (tile.right <= 0) {
-                tile.setX(game.getWidth());
+        for (int i = 0; i < displayRects.length; i++) {
+            displayRects[i].moveX(Pipe.vel);
+            if (displayRects[i].right < 0) {
+                displayRects[i == 1 ? 0 : 1].setX(0);
+                displayRects[i].setX(game.getWidth());
             }
         }
     }
-
-
 
     public void draw(Canvas canvas) {
         Paint paint = new Paint();
@@ -50,7 +50,7 @@ public class Ground {
                 // hitbox
             canvas.drawRect((float) tile.left, (float) tile.top, (float) tile.right, (float) tile.bot, paint);
                 // sprite
-            canvas.drawBitmap(bitmap, (float) tile.left, (float) tile.top, paint);
+            canvas.drawBitmap(bitmap, (float) tile.left, (float) tile.top, null);
         }
     }
 }

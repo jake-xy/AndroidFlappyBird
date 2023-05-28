@@ -70,6 +70,9 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         initGame();
         bgImg = BitmapFactory.decodeResource(this.getResources(), R.drawable.bg);
         bgImg = Bitmap.createScaledBitmap(bgImg, getWidth(), getHeight(), true);
+
+        System.out.println("Width: " + this.getWidth());
+        System.out.println("Height: " + this.getHeight());
         gameLoop.startLoop();
     }
 
@@ -160,5 +163,19 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
                 pipes = remove(pipe, pipes);
             }
         }
+    }
+
+    public double scaledX(double xVal) {
+        // this is the width of the screen when I was building the app.
+        // Therefore, I used this as reference
+        double referenceWidth = 1080;
+        return this.getWidth() * (xVal/referenceWidth);
+    }
+
+    public double scaledY(double yVal) {
+        // this is the height of the screen when I was building the app.
+        // Therefore, I used this as reference
+        double referenceHeight = 1647;
+        return this.getHeight() * (yVal/referenceHeight);
     }
 }

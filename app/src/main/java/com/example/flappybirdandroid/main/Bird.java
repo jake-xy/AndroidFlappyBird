@@ -20,7 +20,7 @@ public class Bird {
     public Rect rect;
     public boolean alive = true, onGround = false, flapping = false;
     private boolean initDeathAnime = false;
-    private final static int JUMP_VEL = 45;
+    private int JUMP_VEL;
     private double jumpVel = 0, acc = 0, rotation = 0;
     private double swayDir = -1, swayVel = -8;
     private Bitmap[] bitmaps = new Bitmap[3];
@@ -30,7 +30,8 @@ public class Bird {
 
     public Bird(Game game) {
         this.game = game;
-        rect = new Rect(game.getWidth() * 0.30, game.getHeight() / 2, 110, 100);
+        JUMP_VEL = (int) game.scaledY(45);
+        rect = new Rect(game.getWidth() * 0.30, game.getHeight() / 2, game.scaledX(110), game.scaledY(100));
 
         for (int i = 0; i < 3; i++) {
             int id = game.getResources().getIdentifier("b" + (i+1), "drawable", game.getContext().getPackageName());
@@ -71,11 +72,11 @@ public class Bird {
                 rect.moveY(jumpVel);
 
                 if (jumpVel > 0) {
-                    acc += 0.3;
-                    jumpVel += 3 + acc;
+                    acc += game.scaledY(0.3);
+                    jumpVel += game.scaledY(3) + acc;
                 }
                 else {
-                    jumpVel += 3;
+                    jumpVel += game.scaledY(3);
                 }
             }
 
@@ -88,11 +89,11 @@ public class Bird {
             }
         }
         else {
-            if (swayDir == -1 && rect.y < game.getHeight()/2 - 80) {
+            if (swayDir == -1 && rect.y < game.getHeight()/2 - game.scaledY(80)) {
                 swayDir = 1;
             }
-            else if (swayDir == 1 && rect.y > game.getHeight()/2 + 80) {
-                swayVel = 8;
+            else if (swayDir == 1 && rect.y > game.getHeight()/2 + game.scaledY(80)) {
+                swayVel = game.scaledY(8);
                 swayDir = -1;
             }
             swayVel += 0.5*swayDir;

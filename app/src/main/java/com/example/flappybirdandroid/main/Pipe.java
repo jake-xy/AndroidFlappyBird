@@ -23,10 +23,12 @@ public class Pipe {
 
     public Pipe(Game game) {
         this.game = game;
-        double gapH = 540;
+        Pipe.vel = game.scaledX(-13);
+
+        double gapH = game.scaledY(540);
         double randomY = (double) getRandomNumber((int) Ground.height, (int) (game.getHeight() - (Ground.height*1.5+gapH)));
 
-        gapRect = new Rect(game.getWidth() + 100, randomY, 190, gapH);
+        gapRect = new Rect(game.getWidth() + game.scaledX(100), randomY, game.scaledX(190), gapH);
         topRect = new Rect(gapRect.x, 0, gapRect.w, 0+ gapRect.top);
         botRect = new Rect(gapRect.x, gapRect.bot, gapRect.w, game.getHeight() - gapRect.bot);
 

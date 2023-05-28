@@ -25,6 +25,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     private GameLoop gameLoop;
     private Bird bird;
     private Pipe[] pipes = new Pipe[0];
+    private Ground ground;
     private int score = 0, timer = 0;
 
     public Game(Context context) {
@@ -36,11 +37,23 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         setFocusable(true);
     }
 
+    public void initGame() {
+        bird = new Bird(this);
+        pipes = new Pipe[0];
+        ground = new Ground(this);
+        score = 0;
+        timer = 0;
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 
         switch(event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                if (!bird.flapping) {
+                    pipes = append(pipes, new Pipe(this, this.getWidth()*1.5));
+                    bird.flapping = true;
+                }
                 if (bird.rect.top > 0)
                     bird.jump();
                 return true;
@@ -51,8 +64,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
-        bird = new Bird(this);
-        pipes = append(pipes, new Pipe(this));
+        initGame();
         gameLoop.startLoop();
     }
 
@@ -73,7 +85,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         for (Pipe pipe : pipes) {
             pipe.draw(canvas);
         }
-
+        ground.draw(canvas);
         bird.draw(canvas);
 
         drawUPS(canvas);
@@ -81,7 +93,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void drawUPS(Canvas canvas) {
-        String averageUPS = Double.toString(gameLoop.getAverageUPS());
+        String averageUPS = Double.toString((int)gameLoop.getAverageUPS());
         Paint paint = new Paint();
         paint.setTextSize(40);
         paint.setColor(ContextCompat.getColor(getContext(), R.color.magenta));
@@ -89,7 +101,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void drawFPS(Canvas canvas) {
-        String averageFPS = Double.toString(gameLoop.getAverageFPS());
+        String averageFPS = Double.toString((int)gameLoop.getAverageFPS());
         Paint paint = new Paint();
 
         paint.setColor(ContextCompat.getColor(getContext(), R.color.magenta));
@@ -102,16 +114,17 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         // update game state
         bird.update();
 
-        if (!bird.alive) {
+        if (!bird.alive && bird.onGround) {
             timer += 1;
-            if (timer > 120) {
-                gameLoop.stop();
+            if (timer > 45) {
+               initGame();
             }
         }
 
-        // ground
-        if (bird.rect.bot >= this.getHeight()) {
-            bird.rect.setY(this.getHeight() - bird.rect.h);
+        // ground collision
+        if (bird.rect.bot > ground.rect.top && !bird.onGround) {
+            bird.rect.setY(ground.rect.top - bird.rect.h);
+            bird.onGround = true;
             bird.alive = false;
         }
 
@@ -119,10 +132,10 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
             if (bird.alive) {
                 pipe.update();
             }
-
             // collision
-            if (bird.rect.collides(pipe.topRect) || bird.rect.collides(pipe.botRect)) {
+            if (bird.alive && (bird.rect.collides(pipe.topRect) || bird.rect.collides(pipe.botRect)) ) {
                 bird.alive = false;
+                break;
             }
 
             // score

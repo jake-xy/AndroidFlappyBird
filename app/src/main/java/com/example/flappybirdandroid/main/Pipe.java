@@ -15,14 +15,25 @@ public class Pipe {
 
     public Rect gapRect, topRect, botRect;
     public boolean passed = false;
+    public static double vel = -20;
     Game game;
 
     public Pipe(Game game) {
         this.game = game;
         double h = 540;
-        double randomY = (double) getRandomNumber(200, (int) (game.getHeight() - (200+h)));
+        double randomY = (double) getRandomNumber((int) Ground.height, (int) (game.getHeight() - (Ground.height+h)));
 
         gapRect = new Rect(game.getWidth() + 100, randomY, 150, h);
+        topRect = new Rect(gapRect.x, 0, gapRect.w, 0+ gapRect.top);
+        botRect = new Rect(gapRect.x, gapRect.bot, gapRect.w, game.getHeight() - gapRect.bot);
+    }
+
+    public Pipe(Game game, double x) {
+        this.game = game;
+        double h = 540;
+        double randomY = (double) getRandomNumber(200, (int) (game.getHeight() - (200+h)));
+
+        gapRect = new Rect(x, randomY, 150, h);
         topRect = new Rect(gapRect.x, 0, gapRect.w, 0+ gapRect.top);
         botRect = new Rect(gapRect.x, gapRect.bot, gapRect.w, game.getHeight() - gapRect.bot);
     }
@@ -42,8 +53,8 @@ public class Pipe {
 
 
     public void update() {
-        gapRect.moveX(-20);
-        topRect.moveX(-20);
-        botRect.moveX(-20);
+        gapRect.moveX(vel);
+        topRect.moveX(vel);
+        botRect.moveX(vel);
     }
 }

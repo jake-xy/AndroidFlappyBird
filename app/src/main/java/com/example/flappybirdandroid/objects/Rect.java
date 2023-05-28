@@ -61,8 +61,8 @@ public class Rect {
 
     public boolean collides(Rect rect) {
 
-        if (right >= rect.left && left <= rect.right) {
-            if (bot >= rect.top && top <= rect.bot) {
+        if (right > rect.left && left < rect.right) {
+            if (bot > rect.top && top < rect.bot) {
                 return true;
             }
         }

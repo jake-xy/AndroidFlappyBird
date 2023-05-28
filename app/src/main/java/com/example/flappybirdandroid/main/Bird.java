@@ -13,16 +13,16 @@ public class Bird {
 
     private Game game;
     public Rect rect;
-    public boolean alive = true, onGround = false;
+    public boolean alive = true, onGround = false, flapping = false;
     private boolean initDeathAnime = false;
     private final static int JUMP_VEL = 45;
     private double jumpVel = 0, acc = 0;
+    private double swayDir = -1, swayVel = -8;
 
 
     public Bird(Game game) {
         this.game = game;
-        rect = new Rect(game.getWidth() * 0.30, game.getHeight()/2, 100, 100);
-        jump();
+        rect = new Rect(game.getWidth() * 0.30, game.getHeight() / 2, 110, 100);
     }
 
     public void draw(Canvas canvas) {
@@ -34,24 +34,36 @@ public class Bird {
     }
 
     public void update() {
+        if (flapping) {
+            if (!onGround) {
+                rect.moveY(jumpVel);
 
-        if (!onGround) {
-            rect.moveY(jumpVel);
-
-            if (jumpVel > 0) {
-                acc += 0.3;
-                jumpVel += 3 + acc;
+                if (jumpVel > 0) {
+                    acc += 0.3;
+                    jumpVel += 3 + acc;
+                }
+                else {
+                    jumpVel += 3;
+                }
             }
-            else {
-                jumpVel += 3;
+
+            if(!alive && !initDeathAnime) {
+                // jump
+                jumpVel = -JUMP_VEL;
+                acc = 0;
+                initDeathAnime = true;
             }
         }
-
-        if(!alive && !initDeathAnime) {
-            // jump
-            jumpVel = -JUMP_VEL;
-            acc = 0;
-            initDeathAnime = true;
+        else {
+            if (swayDir == -1 && rect.y < game.getHeight()/2 - 80) {
+                swayDir = 1;
+            }
+            else if (swayDir == 1 && rect.y > game.getHeight()/2 + 80) {
+                swayVel = 8;
+                swayDir = -1;
+            }
+            swayVel += 0.5*swayDir;
+            rect.moveY(swayVel);
         }
     }
 

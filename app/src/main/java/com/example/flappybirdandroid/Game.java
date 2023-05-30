@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.media.MediaPlayer;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -34,12 +35,21 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
 
     public double dt, prevTime;
 
+    private static MediaPlayer pointSound, swooshSound;
+
     public Game(Context context) {
         super(context);
         // get surface holder
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
+
         gameLoop = new GameLoop(this, surfaceHolder);
+
+        if (pointSound == null) {
+            pointSound = MediaPlayer.create(getContext(), R.raw.point);
+            swooshSound = MediaPlayer.create(getContext(), R.raw.swoosh);
+        }
+
         setFocusable(true);
     }
 
@@ -49,6 +59,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         ground = new Ground(this);
         score = 0;
         timer = 0;
+        Game.swooshSound.start();
     }
 
     @Override
@@ -145,7 +156,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         if (bird.rect.bot > ground.rect.top && !bird.onGround) {
             bird.rect.setY(ground.rect.top - bird.rect.h);
             bird.onGround = true;
-            bird.alive = false;
+            if (bird.alive) {
+                Bird.hitSound.start();
+                bird.alive = false;
+            }
+            Game.swooshSound.start();
         }
 
         if (bird.alive) ground.update();
@@ -166,6 +181,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
                 score ++;
                 pipes = append(pipes, new Pipe(this));
                 pipe.passed = true;
+                Game.pointSound.start();
             }
 
             // remove once the pipe is offscreen

@@ -30,7 +30,7 @@ public class Bird {
     private Bitmap[] bitmaps = new Bitmap[3];
     private int drawTicks = 0;
     private final int maxDrawTicks = 30;
-    MediaPlayer jumpMp;
+    public static MediaPlayer jumpSound, hitSound, dieSound;
 
     public Bird(Game game) {
         this.game = game;
@@ -43,7 +43,11 @@ public class Bird {
             bitmaps[i] = Bitmap.createScaledBitmap(bitmaps[i], (int) rect.w, (int) rect.h, true);
         }
 
-        jumpMp = MediaPlayer.create(game.getContext(), R.raw.wing);
+        if (Bird.jumpSound == null) {
+            Bird.jumpSound = MediaPlayer.create(game.getContext(), R.raw.wing);
+            Bird.hitSound = MediaPlayer.create(game.getContext(), R.raw.hit);
+            Bird.dieSound = MediaPlayer.create(game.getContext(), R.raw.die);
+        }
     }
 
     public void draw(Canvas canvas) {
@@ -92,13 +96,17 @@ public class Bird {
                     jumpVel += game.scaledY(3);
                 }
             }
-
+            // when the bird dies (collides with pipe)
             if(!alive && !initDeathAnime && !onGround) {
-                // jump
-                jumpVel = -JUMP_VEL;
-                rotation = -30;
-                acc = 0;
-                initDeathAnime = true;
+                if (!onGround) {
+                    // jump
+                    jumpVel = -JUMP_VEL;
+                    rotation = -30;
+                    acc = 0;
+                    initDeathAnime = true;
+                    Bird.hitSound.start();
+                    Bird.dieSound.start();
+                }
             }
         }
         else {
@@ -143,13 +151,17 @@ public class Bird {
                     jumpVel += game.scaledY(3);
                 }
             }
-
-            if(!alive && !initDeathAnime && !onGround) {
-                // jump
-                jumpVel = -JUMP_VEL;
-                rotation = -30;
-                acc = 0;
-                initDeathAnime = true;
+            // when the bird dies (collides with pipe)
+            if(!alive && !initDeathAnime) {
+                if (!onGround) {
+                    // jump
+                    jumpVel = -JUMP_VEL;
+                    rotation = -30;
+                    acc = 0;
+                    initDeathAnime = true;
+                    Bird.hitSound.start();
+                    Bird.dieSound.start();
+                }
             }
         }
         else {
@@ -167,10 +179,10 @@ public class Bird {
 
     public void jump() {
         if (alive) {
-            if( jumpMp.isPlaying()) {
-                jumpMp.seekTo(0);
+            if(Bird.jumpSound.isPlaying()) {
+                Bird.jumpSound.seekTo(0);
             }
-            jumpMp.start();
+            Bird.jumpSound.start();
             jumpVel = -JUMP_VEL;
             rotation = -30;
             acc = 0;

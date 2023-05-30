@@ -27,15 +27,15 @@ public class Bird {
     private int JUMP_VEL;
     private double jumpVel = 0, acc = 0, rotation = 0;
     private double swayDir = -1, swayVel = -8;
-    private Bitmap[] bitmaps = new Bitmap[3];
     private int drawTicks = 0;
     private final int maxDrawTicks = 30;
+    private Bitmap[] bitmaps = new Bitmap[3];
     public static MediaPlayer jumpSound, hitSound, dieSound;
 
     public Bird(Game game) {
         this.game = game;
         JUMP_VEL = (int) game.scaledY(42);
-        rect = new Rect(game.getWidth() * 0.30, game.getHeight() / 2, game.scaledY(120), game.scaledY(100));
+        rect = new Rect(game.getWidth() * 0.30, game.getHeight() / 2, game.scaledY(130), game.scaledY(100));
 
         for (int i = 0; i < 3; i++) {
             int id = game.getResources().getIdentifier("b" + (i+1), "drawable", game.getContext().getPackageName());
@@ -69,10 +69,6 @@ public class Bird {
         canvas.drawBitmap(bitmap, (float) (rect.left), (float) (rect.top), paint);
         canvas.rotate((float) -rotation, (float) rect.getCenterX(), (float) rect.getCenterY());
 
-        if (rotation < 45 && flapping && !onGround) {
-            rotation += 2 + acc;
-        }
-
         if (drawTicks < maxDrawTicks-1) {
             if (alive) {
                 drawTicks += 1;
@@ -83,49 +79,14 @@ public class Bird {
         }
     }
 
-    public void update() {
-        if (flapping) {
-            if (!onGround) {
-                rect.moveY(jumpVel *game.dt);
-
-                if (jumpVel > 0) {
-                    acc += game.scaledY(0.3);
-                    jumpVel += game.scaledY(3) + acc;
-                }
-                else {
-                    jumpVel += game.scaledY(3);
-                }
-            }
-            // when the bird dies (collides with pipe)
-            if(!alive && !initDeathAnime && !onGround) {
-                if (!onGround) {
-                    // jump
-                    jumpVel = -JUMP_VEL;
-                    rotation = -30;
-                    acc = 0;
-                    initDeathAnime = true;
-                    Bird.hitSound.start();
-                    Bird.dieSound.start();
-                }
-            }
-        }
-        else {
-            if (swayDir == -1 && rect.y < game.getHeight()/2 - game.scaledY(80)) {
-                swayDir = 1;
-            }
-            else if (swayDir == 1 && rect.y > game.getHeight()/2 + game.scaledY(80)) {
-                swayVel = game.scaledY(8);
-                swayDir = -1;
-            }
-            swayVel += 0.5*swayDir;
-            rect.moveY(swayVel *game.dt);
-        }
-    }
-
-
     public void update(Pipe[] pipes) {
         if (flapping) {
             if (!onGround) {
+
+                if (rotation < 90 && jumpVel > 0) {
+                    rotation += (3+acc) * game.dt;
+                }
+
                 rect.moveY(jumpVel *game.dt);
                 // collision
                 if (alive) {
@@ -144,11 +105,11 @@ public class Bird {
                 }
 
                 if (jumpVel > 0) {
-                    acc += game.scaledY(0.3);
-                    jumpVel += game.scaledY(3) + acc;
+                    acc += game.scaledY(0.3 *game.dt);
+                    jumpVel += game.scaledY(3 *game.dt) + acc;
                 }
                 else {
-                    jumpVel += game.scaledY(3);
+                    jumpVel += game.scaledY(3 *game.dt);
                 }
             }
             // when the bird dies (collides with pipe)
@@ -156,7 +117,6 @@ public class Bird {
                 if (!onGround) {
                     // jump
                     jumpVel = -JUMP_VEL;
-                    rotation = -30;
                     acc = 0;
                     initDeathAnime = true;
                     Bird.hitSound.start();
@@ -164,15 +124,16 @@ public class Bird {
                 }
             }
         }
+        // during the get ready phase
         else {
-            if (swayDir == -1 && rect.y < game.getHeight()/2 - game.scaledY(80)) {
+            if (swayDir == -1 && rect.y < game.getHeight()/2 - game.scaledY(30)) {
                 swayDir = 1;
             }
-            else if (swayDir == 1 && rect.y > game.getHeight()/2 + game.scaledY(80)) {
+            else if (swayDir == 1 && rect.y > game.getHeight()/2 + game.scaledY(30)) {
                 swayVel = game.scaledY(8);
                 swayDir = -1;
             }
-            swayVel += 0.5*swayDir;
+            swayVel += 0.5*swayDir *game.dt;
             rect.moveY(swayVel *game.dt);
         }
     }
@@ -184,7 +145,7 @@ public class Bird {
             }
             Bird.jumpSound.start();
             jumpVel = -JUMP_VEL;
-            rotation = -30;
+            rotation = -25;
             acc = 0;
         }
     }

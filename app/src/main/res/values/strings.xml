@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">FlappyBirdAndroid</string>
+    <string name="high_score">0</string>
 </resources>

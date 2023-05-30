@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
 
 import androidx.core.content.ContextCompat;
 
@@ -17,7 +18,7 @@ import com.example.flappybirdandroid.objects.Rect;
 public class Pipe {
 
     public Rect gapRect, topRect, botRect;
-    public boolean passed = false;
+    public boolean passedBird = false, passedMiddle = false;
     public static double vel = -13;
     Game game;
     private static Bitmap bitmap;
@@ -26,7 +27,7 @@ public class Pipe {
         this.game = game;
         Pipe.vel = game.scaledY(-13);
 
-        double gapH = game.scaledY(500);
+        double gapH = game.scaledY(520);
         double randomY = (double) getRandomNumber((int) Ground.height, (int) (game.getHeight() - (Ground.height*1.5+gapH)));
 
         gapRect = new Rect(game.getWidth() + game.scaledX(100), randomY, game.scaledY(190), gapH);
@@ -34,6 +35,8 @@ public class Pipe {
         botRect = new Rect(gapRect.x, gapRect.bot, gapRect.w, game.getHeight() - gapRect.bot);
 
         if (Pipe.bitmap == null) {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inScaled = true;
             Pipe.bitmap = BitmapFactory.decodeResource(game.getResources(), R.drawable.pipe);
             Pipe.bitmap = Bitmap.createScaledBitmap(Pipe.bitmap, (int)gapRect.w, (int)(gapRect.w*Pipe.bitmap.getHeight() / Pipe.bitmap.getWidth()), true);
         }

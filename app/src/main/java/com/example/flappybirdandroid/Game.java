@@ -3,6 +3,8 @@ package com.example.flappybirdandroid;
 import static com.example.flappybirdandroid.main.Utils.*;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.content.res.loader.ResourcesProvider;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -17,6 +19,10 @@ import androidx.core.content.ContextCompat;
 
 import com.example.flappybirdandroid.main.*;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 
 /*
     Game manages all objects in the game and is responsible for updating all tha game states and
@@ -29,13 +35,14 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     private Bird bird;
     private Pipe[] pipes = new Pipe[0];
     private Ground ground;
-    private int score = 0, timer = 0;
+    public int score = 0, timer = 0;
     public boolean showHitbox = false;
     Bitmap bgImg;
-
     public double dt, prevTime;
-
     private static MediaPlayer pointSound, swooshSound;
+    ScoreRenderer scorer;
+    ScoreBoard scoreBoard;
+    InputStream inputStream;
 
     public Game(Context context) {
         super(context);
@@ -45,21 +52,20 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
 
         gameLoop = new GameLoop(this, surfaceHolder);
 
+        System.out.println("-------------------");
+        try {
+            inputStream = getContext().getAssets().open("/storage/sdcard0/scores.txt");
+            System.out.println("HIGH: " + inputStream.read());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("-------------------");
+
         if (pointSound == null) {
             pointSound = MediaPlayer.create(getContext(), R.raw.point);
             swooshSound = MediaPlayer.create(getContext(), R.raw.swoosh);
         }
-
         setFocusable(true);
-    }
-
-    public void initGame() {
-        bird = new Bird(this);
-        pipes = new Pipe[0];
-        ground = new Ground(this);
-        score = 0;
-        timer = 0;
-        Game.swooshSound.start();
     }
 
     @Override
@@ -67,21 +73,51 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
 
         switch(event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                // to start the actual game (where the bird is flapping)
                 if (!bird.flapping) {
                     pipes = append(pipes, new Pipe(this, this.getWidth()*1.5));
                     bird.flapping = true;
                 }
-                if (bird.rect.top > 0)
+
+                if (bird.rect.top > 0) {
                     bird.jump();
+                }
+
+                if (scoreBoard.visible) {
+                    if (scoreBoard.countingUp) {
+                        scoreBoard.countingUp = false;
+                        scoreBoard.counted = true;
+                    }
+                }
+
+                if (scoreBoard.drawingMedal) {
+                    if (scoreBoard.okRect.collides((int) event.getX(), (int) event.getY())) {
+                        scoreBoard.lastTime = System.currentTimeMillis();
+                        scoreBoard.okPressed = true;
+                        scoreBoard.visible = false;
+                        initGame();
+                    }
+                }
                 return true;
         }
 
         return super.onTouchEvent(event);
     }
 
+    public void initGame() {
+        bird = new Bird(this);
+        pipes = new Pipe[0];
+        ground = new Ground(this);
+        score = 0;
+        Game.swooshSound.start();
+    }
+
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
         initGame();
+        scorer = new ScoreRenderer(this);
+        scoreBoard = new ScoreBoard(this);
+
         bgImg = BitmapFactory.decodeResource(this.getResources(), R.drawable.bg);
         bgImg = Bitmap.createScaledBitmap(bgImg, getWidth(), getHeight(), true);
 
@@ -111,6 +147,12 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         ground.draw(canvas);
         bird.draw(canvas);
 
+        if (!bird.onGround) {
+            scorer.render(score, canvas);
+        }
+
+        scoreBoard.draw(canvas);
+
         drawUPS(canvas);
         drawFPS(canvas);
     }
@@ -130,26 +172,21 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         paint.setColor(ContextCompat.getColor(getContext(), R.color.magenta));
         paint.setTextSize(40);
         canvas.drawText("FPS: " + averageFPS, 20, 120, paint);
-        canvas.drawText("Score: " + score, 20, 170, paint);
-//        canvas.drawText("Vel: " + Pipe.vel, 20, 220, paint);
-//        canvas.drawText("BWidth: " + bird.rect.w, 20, 270, paint);
     }
 
     public void update() {
 
         dt = (System.currentTimeMillis() - prevTime)/1000.0;
-        dt *= GameLoop.MAX_UPS;
-//        System.out.println("DT: " + dt);
+        dt *= 32;
+
         prevTime = System.currentTimeMillis();
 
         // update game state
         bird.update(pipes);
 
-        if (!bird.alive && bird.onGround) {
-            timer += 1;
-            if (timer > 45) {
-               initGame();
-            }
+        // handles death
+        if (!bird.alive && bird.onGround && !scoreBoard.okPressed) {
+            scoreBoard.visible = true;
         }
 
         // ground collision
@@ -177,10 +214,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
             }
 
             // score
-            if (!pipe.passed && bird.rect.centerX >= pipe.gapRect.centerX) {
+            if (!pipe.passedBird && bird.rect.centerX >= pipe.gapRect.centerX) {
                 score ++;
+                // generating new pipes
                 pipes = append(pipes, new Pipe(this));
-                pipe.passed = true;
+                pipe.passedBird = true;
                 Game.pointSound.start();
             }
 
@@ -189,6 +227,9 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
                 pipes = remove(pipe, pipes);
             }
         }
+
+        // scoreboard
+        scoreBoard.update(score);
     }
 
     public double scaledX(double xVal) {

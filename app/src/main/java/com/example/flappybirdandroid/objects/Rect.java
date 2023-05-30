@@ -92,6 +92,10 @@ public class Rect {
         updateRect();
     }
 
+    public String toString() {
+        return "x: " + x + ", y: " + y + ", w: " + w + ", h: " + h;
+    }
+
     public double getCenterX() {
         return left + w/2;
     }

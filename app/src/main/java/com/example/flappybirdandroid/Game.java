@@ -24,12 +24,15 @@ import com.example.flappybirdandroid.main.*;
 
 public class Game extends SurfaceView implements SurfaceHolder.Callback {
 
-    private GameLoop gameLoop;
+    GameLoop gameLoop;
     private Bird bird;
     private Pipe[] pipes = new Pipe[0];
     private Ground ground;
     private int score = 0, timer = 0;
+    public boolean showHitbox = false;
     Bitmap bgImg;
+
+    public double dt, prevTime;
 
     public Game(Context context) {
         super(context);
@@ -71,8 +74,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         bgImg = BitmapFactory.decodeResource(this.getResources(), R.drawable.bg);
         bgImg = Bitmap.createScaledBitmap(bgImg, getWidth(), getHeight(), true);
 
-        System.out.println("Width: " + this.getWidth());
-        System.out.println("Height: " + this.getHeight());
+        prevTime = System.currentTimeMillis();
         gameLoop.startLoop();
     }
 
@@ -118,11 +120,19 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         paint.setTextSize(40);
         canvas.drawText("FPS: " + averageFPS, 20, 120, paint);
         canvas.drawText("Score: " + score, 20, 170, paint);
+//        canvas.drawText("Vel: " + Pipe.vel, 20, 220, paint);
+//        canvas.drawText("BWidth: " + bird.rect.w, 20, 270, paint);
     }
 
     public void update() {
+
+        dt = (System.currentTimeMillis() - prevTime)/1000.0;
+        dt *= GameLoop.MAX_UPS;
+//        System.out.println("DT: " + dt);
+        prevTime = System.currentTimeMillis();
+
         // update game state
-        bird.update();
+        bird.update(pipes);
 
         if (!bird.alive && bird.onGround) {
             timer += 1;
@@ -144,6 +154,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
             if (bird.alive) {
                 pipe.update();
             }
+
             // collision
             if (bird.alive && (bird.rect.collides(pipe.topRect) || bird.rect.collides(pipe.botRect)) ) {
                 bird.alive = false;
@@ -155,7 +166,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
                 score ++;
                 pipes = append(pipes, new Pipe(this));
                 pipe.passed = true;
-                System.out.println("score: " + score);
             }
 
             // remove once the pipe is offscreen

@@ -11,6 +11,8 @@ public class GameLoop extends Thread{
     private Game game;
     private double averageUPS, averageFPS;
 
+    public long startTime, elapsedTime, sleepTime;
+
     public GameLoop(Game game, SurfaceHolder surfaceHolder) {
         this.surfaceHolder = surfaceHolder;
         this.game = game;
@@ -35,12 +37,11 @@ public class GameLoop extends Thread{
         // Declare time and cycle variables
         int updateCount = 0, frameCount = 0;
 
-        long startTime, elapsedTime, sleepTime;
-
         // game loop
         startTime =  System.currentTimeMillis();
         Canvas canvas = null;
         while (running) {
+
             // try to update and render game
             try {
                 synchronized (surfaceHolder) {

@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 
 import androidx.core.content.ContextCompat;
 
@@ -13,6 +15,8 @@ import com.example.flappybirdandroid.Game;
 import com.example.flappybirdandroid.GameLoop;
 import com.example.flappybirdandroid.R;
 import com.example.flappybirdandroid.objects.*;
+
+import java.io.IOException;
 
 public class Bird {
 
@@ -26,40 +30,49 @@ public class Bird {
     private Bitmap[] bitmaps = new Bitmap[3];
     private int drawTicks = 0;
     private final int maxDrawTicks = 30;
-
+    MediaPlayer jumpMp;
 
     public Bird(Game game) {
         this.game = game;
-        JUMP_VEL = (int) game.scaledY(45);
-        rect = new Rect(game.getWidth() * 0.30, game.getHeight() / 2, game.scaledX(110), game.scaledY(100));
+        JUMP_VEL = (int) game.scaledY(42);
+        rect = new Rect(game.getWidth() * 0.30, game.getHeight() / 2, game.scaledY(120), game.scaledY(100));
 
         for (int i = 0; i < 3; i++) {
             int id = game.getResources().getIdentifier("b" + (i+1), "drawable", game.getContext().getPackageName());
             bitmaps[i] = BitmapFactory.decodeResource(game.getResources(), id);
+            bitmaps[i] = Bitmap.createScaledBitmap(bitmaps[i], (int) rect.w, (int) rect.h, true);
         }
+
+        jumpMp = MediaPlayer.create(game.getContext(), R.raw.wing);
     }
 
     public void draw(Canvas canvas) {
-        Paint paint = new Paint();
-            // draws the hitbox
-//        paint.setColor(ContextCompat.getColor(game.getContext(), R.color.red));
-//        paint.setStrokeWidth(5);
-//        canvas.drawRect((float) rect.left, (float) rect.top, (float) rect.right, (float) rect.bot, paint);
-            // renders the sprite
+        Paint paint = null;
 
+        if (game.showHitbox) {
+                // draws the hitbox
+            paint = new Paint();
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setColor(ContextCompat.getColor(game.getContext(), R.color.red));
+            paint.setStrokeWidth(5);
+            canvas.drawRect((float) rect.left, (float) rect.top, (float) rect.right, (float) rect.bot, paint);
+        }
+
+            // renders the sprite
         Bitmap bitmap = bitmaps[(int)(drawTicks/(maxDrawTicks/3))];
-        bitmap = Bitmap.createScaledBitmap(bitmap, (int) rect.w, (int) rect.h, true);
 
         canvas.rotate((float) rotation, (float) rect.getCenterX(), (float) rect.getCenterY());
         canvas.drawBitmap(bitmap, (float) (rect.left), (float) (rect.top), paint);
         canvas.rotate((float) -rotation, (float) rect.getCenterX(), (float) rect.getCenterY());
 
-        if (rotation < 30 && flapping && !onGround) {
+        if (rotation < 45 && flapping && !onGround) {
             rotation += 2 + acc;
         }
 
-        if (drawTicks < maxDrawTicks-1 && alive) {
-            drawTicks += 1;
+        if (drawTicks < maxDrawTicks-1) {
+            if (alive) {
+                drawTicks += 1;
+            }
         }
         else {
             drawTicks = 0;
@@ -69,7 +82,7 @@ public class Bird {
     public void update() {
         if (flapping) {
             if (!onGround) {
-                rect.moveY(jumpVel);
+                rect.moveY(jumpVel *game.dt);
 
                 if (jumpVel > 0) {
                     acc += game.scaledY(0.3);
@@ -80,7 +93,7 @@ public class Bird {
                 }
             }
 
-            if(!alive && !initDeathAnime) {
+            if(!alive && !initDeathAnime && !onGround) {
                 // jump
                 jumpVel = -JUMP_VEL;
                 rotation = -30;
@@ -97,12 +110,67 @@ public class Bird {
                 swayDir = -1;
             }
             swayVel += 0.5*swayDir;
-            rect.moveY(swayVel);
+            rect.moveY(swayVel *game.dt);
+        }
+    }
+
+
+    public void update(Pipe[] pipes) {
+        if (flapping) {
+            if (!onGround) {
+                rect.moveY(jumpVel *game.dt);
+                // collision
+                if (alive) {
+                    for (Pipe pipe : pipes) {
+                        if (rect.collides(pipe.botRect)) {
+                            rect.setY(pipe.botRect.top - rect.h);
+                            alive = false;
+                            break;
+                        }
+                        else if (rect.collides(pipe.topRect)) {
+                            rect.setY(pipe.topRect.bot);
+                            alive = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (jumpVel > 0) {
+                    acc += game.scaledY(0.3);
+                    jumpVel += game.scaledY(3) + acc;
+                }
+                else {
+                    jumpVel += game.scaledY(3);
+                }
+            }
+
+            if(!alive && !initDeathAnime && !onGround) {
+                // jump
+                jumpVel = -JUMP_VEL;
+                rotation = -30;
+                acc = 0;
+                initDeathAnime = true;
+            }
+        }
+        else {
+            if (swayDir == -1 && rect.y < game.getHeight()/2 - game.scaledY(80)) {
+                swayDir = 1;
+            }
+            else if (swayDir == 1 && rect.y > game.getHeight()/2 + game.scaledY(80)) {
+                swayVel = game.scaledY(8);
+                swayDir = -1;
+            }
+            swayVel += 0.5*swayDir;
+            rect.moveY(swayVel *game.dt);
         }
     }
 
     public void jump() {
         if (alive) {
+            if( jumpMp.isPlaying()) {
+                jumpMp.seekTo(0);
+            }
+            jumpMp.start();
             jumpVel = -JUMP_VEL;
             rotation = -30;
             acc = 0;

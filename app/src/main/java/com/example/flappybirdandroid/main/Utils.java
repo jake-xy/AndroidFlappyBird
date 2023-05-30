@@ -9,9 +9,7 @@ public class Utils {
     public static Pipe[] append(Pipe[] array, Pipe item) {
         Pipe[] out = new Pipe[array.length+1];
 
-        for (int i = 0; i < array.length; i++) {
-            out[i] = array[i];
-        }
+        System.arraycopy(array, 0, out, 0, array.length);
 
         out[array.length] = item;
         return out;
